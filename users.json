@@ -1,0 +1,11 @@
+{
+  "users": {
+    "paji": {
+      "repo_dir": "/home/paji/Project/Paji-Location",
+      "github_repo": "zirz1911/Paji-Location",
+      "named_places": [
+        {"name": "Contents Office", "lat": 17.445975, "lon": 102.884746, "radius_m": 200}
+      ]
+    }
+  }
+}
