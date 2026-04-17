@@ -176,7 +176,7 @@ async def receive_location(request: Request, username: str = Depends(verify_cred
     lon = data.get("lon")
     batt = data.get("batt", "")
     acc = data.get("acc", "")
-    device = d or data.get("tid", "") or "phone"
+    device = d or "phone"
     ts = datetime.fromtimestamp(data.get("tst", 0), tz=TZ_BKK).strftime("%Y-%m-%dT%H:%M:%S+07:00")
 
     named_places = user_cfg.get("named_places", [])
