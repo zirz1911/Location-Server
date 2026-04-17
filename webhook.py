@@ -160,7 +160,7 @@ async def register_user(body: RegisterRequest, x_register_secret: str = Header(d
 
 
 @app.post("/pub")
-async def receive_location(request: Request, username: str = Depends(verify_credentials), d: str = ""):
+async def receive_location(request: Request, username: str = Depends(verify_credentials)):
     try:
         data = await request.json()
     except Exception:
@@ -176,7 +176,10 @@ async def receive_location(request: Request, username: str = Depends(verify_cred
     lon = data.get("lon")
     batt = data.get("batt", "")
     acc = data.get("acc", "")
-    device = d or "phone"
+    # Extract device from topic field: owntracks/{username}/{deviceid}
+    topic = data.get("topic", "")
+    topic_parts = topic.split("/")
+    device = topic_parts[2] if len(topic_parts) >= 3 else "phone"
     ts = datetime.fromtimestamp(data.get("tst", 0), tz=TZ_BKK).strftime("%Y-%m-%dT%H:%M:%S+07:00")
 
     named_places = user_cfg.get("named_places", [])
