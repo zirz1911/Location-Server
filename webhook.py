@@ -56,20 +56,20 @@ def reverse_geocode(lat, lon) -> str:
         return ""
 
 
-def write_csv(path: str, lat, lon, address, ts, batt, acc):
+def write_csv(path: str, lat, lon, address, ts, batt, acc, device=""):
     with open(path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy"])
-        writer.writerow([lat, lon, address, ts, batt, acc])
+        writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy", "device"])
+        writer.writerow([lat, lon, address, ts, batt, acc, device])
 
 
-def append_history(path: str, lat, lon, address, ts, batt, acc):
+def append_history(path: str, lat, lon, address, ts, batt, acc, device=""):
     write_header = not os.path.exists(path)
     with open(path, "a", newline="") as f:
         writer = csv.writer(f)
         if write_header:
-            writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy"])
-        writer.writerow([lat, lon, address, ts, batt, acc])
+            writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy", "device"])
+        writer.writerow([lat, lon, address, ts, batt, acc, device])
 
 
 def git_push(repo_dir: str, github_repo: str, github_token: str, lat, lon):
@@ -160,7 +160,7 @@ async def register_user(body: RegisterRequest, x_register_secret: str = Header(d
 
 
 @app.post("/pub")
-async def receive_location(request: Request, username: str = Depends(verify_credentials)):
+async def receive_location(request: Request, username: str = Depends(verify_credentials), d: str = ""):
     try:
         data = await request.json()
     except Exception:
@@ -176,6 +176,7 @@ async def receive_location(request: Request, username: str = Depends(verify_cred
     lon = data.get("lon")
     batt = data.get("batt", "")
     acc = data.get("acc", "")
+    device = d or data.get("tid", "") or "phone"
     ts = datetime.fromtimestamp(data.get("tst", 0), tz=TZ_BKK).strftime("%Y-%m-%dT%H:%M:%S+07:00")
 
     named_places = user_cfg.get("named_places", [])
@@ -185,8 +186,8 @@ async def receive_location(request: Request, username: str = Depends(verify_cred
     github_repo = user_cfg["github_repo"]
     github_token = user_cfg.get("github_token", "")
 
-    write_csv(f"{repo_dir}/current.csv", lat, lon, address, ts, batt, acc)
-    append_history(f"{repo_dir}/history.csv", lat, lon, address, ts, batt, acc)
+    write_csv(f"{repo_dir}/current.csv", lat, lon, address, ts, batt, acc, device)
+    append_history(f"{repo_dir}/history.csv", lat, lon, address, ts, batt, acc, device)
 
     print(f"[{username}] {lat},{lon} acc={acc}m — {address[:50] if address else 'unknown'}")
     git_push(repo_dir, github_repo, github_token, lat, lon)

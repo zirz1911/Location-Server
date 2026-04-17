@@ -49,20 +49,20 @@ def reverse_geocode(lat, lon) -> str:
         return ""
 
 
-def write_csv(path: str, lat, lon, address, ts, batt, acc):
+def write_csv(path: str, lat, lon, address, ts, batt, acc, device=""):
     with open(path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy"])
-        writer.writerow([lat, lon, address, ts, batt, acc])
+        writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy", "device"])
+        writer.writerow([lat, lon, address, ts, batt, acc, device])
 
 
-def append_history(path: str, lat, lon, address, ts, batt, acc):
+def append_history(path: str, lat, lon, address, ts, batt, acc, device=""):
     write_header = not os.path.exists(path)
     with open(path, "a", newline="") as f:
         writer = csv.writer(f)
         if write_header:
-            writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy"])
-        writer.writerow([lat, lon, address, ts, batt, acc])
+            writer.writerow(["lat", "lon", "address", "timestamp", "battery", "accuracy", "device"])
+        writer.writerow([lat, lon, address, ts, batt, acc, device])
 
 
 def git_push(repo_dir: str, lat, lon):
@@ -82,6 +82,7 @@ def on_message(client, userdata, msg):
         if len(parts) < 3:
             return
         username = parts[1]
+        device = parts[2] if len(parts) > 2 else "phone"
 
         config = load_config()
         if username not in config:
@@ -103,8 +104,8 @@ def on_message(client, userdata, msg):
         address = resolve_address(lat, lon, named_places)
 
         repo_dir = user_cfg["repo_dir"]
-        write_csv(f"{repo_dir}/current.csv", lat, lon, address, ts, batt, acc)
-        append_history(f"{repo_dir}/history.csv", lat, lon, address, ts, batt, acc)
+        write_csv(f"{repo_dir}/current.csv", lat, lon, address, ts, batt, acc, device)
+        append_history(f"{repo_dir}/history.csv", lat, lon, address, ts, batt, acc, device)
 
         print(f"[{username}] {lat},{lon} acc={acc}m — {address[:50] if address else 'unknown'}")
         git_push(repo_dir, lat, lon)
